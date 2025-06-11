@@ -18,14 +18,13 @@
     </properties>
 
     <dependencies>
-        <!-- API Servlet (Jakarta pour Tomcat 10+) -->
+        <!-- API Servlet (Jakarta pour Tomcat 10+, sinon javax pour Tomcat 9) -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
             <scope>provided</scope>
         </dependency>
-
 
         <!-- SQLite JDBC -->
         <dependency>
@@ -34,11 +33,19 @@
             <version>3.43.2.0</version>
         </dependency>
 
-        <!-- JUnit pour les tests -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope>
+        </dependency>
+
+
+        <!-- Hamcrest (matchers utiles pour les assertions JUnit) -->
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>2.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -75,7 +82,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Plugin Tomcat pour déploiement -->
+            <!-- Plugin Tomcat pour le déploiement local -->
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>

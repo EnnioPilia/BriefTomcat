@@ -13,74 +13,53 @@ import java.util.List;
 import com.example.usermanagement.model.User;
 
 public class UserDAO {
-    private static final String JDBC_URL = "jdbc:sqlite:src/main/resources/db/users.db";
 
-    public UserDAO() {
-        try {
-            Class.forName("org.sqlite.JDBC");  // Charger le driver SQLite
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        createTableIfNotExists();
+    // Méthode que le test surcharge pour retourner la connexion partagée
+    protected Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:sqlite:users.db"); // connexion par défaut
     }
 
-    private void createTableIfNotExists() {
-        String sql = "CREATE TABLE IF NOT EXISTS users ("
-                   + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                   + "name TEXT NOT NULL,"
-                   + "email TEXT NOT NULL,"
-                   + "phone TEXT,"
-                   + "dateNaissance TEXT"
-                   + ");";
-
-        try (Connection conn = DriverManager.getConnection(JDBC_URL);
-             Statement stmt = conn.createStatement()) {
-            stmt.execute(sql);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    // Ajouter un utilisateur en base
+public void add(User user) {
+    Connection conn = null;
+    PreparedStatement ps = null;
+    try {
+        conn = getConnection();
+        ps = conn.prepareStatement("INSERT INTO users(name, email, phone, dateNaissance) VALUES (?, ?, ?, ?)");
+        ps.setString(1, user.getName());
+        ps.setString(2, user.getEmail());
+        ps.setString(3, user.getPhone());
+        ps.setString(4, user.getDateNaissance().toString());
+        ps.executeUpdate();
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    } finally {
+        if (ps != null) try { ps.close(); } catch (SQLException e) { /* ignore */ }
+        // Ne ferme pas la connexion, car elle est gérée à l'extérieur (test)
     }
+}
 
-    public void add(User user) {
-        String sql = "INSERT INTO users(name, email, phone, dateNaissance) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DriverManager.getConnection(JDBC_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, user.getName());
-            pstmt.setString(2, user.getEmail());
-            pstmt.setString(3, user.getPhone());
-            pstmt.setString(4, user.getDateNaissance().toString());
-
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
+    // Lister tous les utilisateurs
     public List<User> listAll() {
-        List<User> users = new ArrayList<>();
+        List<User> list = new ArrayList<>();
         String sql = "SELECT * FROM users";
-
-        try (Connection conn = DriverManager.getConnection(JDBC_URL);
+        try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-
             while (rs.next()) {
                 User user = new User(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getString("email"),
-                    rs.getString("phone"),
-                    LocalDate.parse(rs.getString("dateNaissance"))
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        LocalDate.parse(rs.getString("dateNaissance"))
                 );
-                users.add(user);
+                list.add(user);
             }
-
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-        return users;
+        return list;
     }
 }
